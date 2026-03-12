@@ -14,8 +14,7 @@ lasts_updated datetime
 )""")
 
 
-def insert_file(cursor):
-    path=input("give")
+def insert_file(cursor,path):
     date=datetime.datetime.now().strftime("%Y-%m-%d")
     folder = Path(path)
     try :
@@ -43,28 +42,54 @@ def insert_info(cursor,folder_p):
     data=cursor.fetchall()
     for column in data:
         if column[1]==folder_p :
-            print("path alredy exist")
+            print(column[1]+"path already scanned last time at "+column[2],)
         else :
             f=Path(column[1])
             folder_id=column[0]
             for file in f.rglob("*"): 
                 if file.is_file():
-                    extension = file.suffix
-                    size = file.stat().st_size
-                    name = file.stem
-                    size = file.stat().st_size # size in bytes
-                    ctime = time.ctime(file.stat().st_ctime) # creation time
-                    mtime = time.ctime(file.stat().st_mtime) # last modified time
-                    cursor.execute("insert into info (file_name,extension,size,created_at,modified_at,id_file) values(?,?,?,?,?,?)",(name,extension,size,ctime,mtime,folder_id))
-                    break 
+                    infos()
+                    break
+def infos():
+    extension = file.suffix
+    size = file.stat().st_size
+    name = file.stem
+    size = file.stat().st_size # size in bytes
+    ctime = time.ctime(file.stat().st_ctime) # creation time
+    mtime = time.ctime(file.stat().st_mtime) # last modified time
+    cursor.execute("insert into info (file_name,extension,size,created_at,modified_at,id_file) values(?,?,?,?,?,?)",(name,extension,size,ctime,mtime,folder_id))
+    print("all info of this folder scanned >>")
+
             
 
-  
-insert_file(cursor)
-folder_p=input("give intended folder path")
-insert_info(cursor,folder_p)
-cursor.execute("select*from file")
-print(cursor.fetchall())
+def main(cursor):
+    action=("scan_folder/get_infos")
+    while True :
+        if action=="scan_folder":
+            p=input("give path")
+            cursor.execute("select * from file ")
+            data=cursor.fetchall()
+            for column in data:
+                if column[1]==folder_p :
+                    print(column[1]+"path already scanned last time at "+column[2],)
+                else :
+                    insert_file(cursor,p)
+        elif action=="get_info" :
+            p=input("give path")
+            insert_info(cursor,p)
+        elif action=="re_scan_folder":
+            p=input("give path")
+            cursor.execute("delete from file where path=?",(p,))
+            insert_file(cursor,p)
+        elif action=="exit":
+            break
+        else :
+            print("unvalid syntaxe")
+            
+        
+            
+    
+
 
     
   
